@@ -1,0 +1,96 @@
+#!/bin/bash
+
+help() {
+  echo -e "Gi-st cli 0.1.0\nLicense: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\nKevBP - https://github.com/KevBP\n"
+  echo -e "Usage: gi-st <user_name>\n"
+}
+
+clean_json() {
+  json_clear=$(echo $json | sed 's/[\"{}]//g')
+}
+
+if [ $# -ne 1 ]
+then
+  help
+else
+  json=$(curl -s https://api.github.com/users/$1)
+  clean_json
+  echo $json_clear | awk -F"[,]" '{
+    created_at=public_repos=public_gists=login=html_url=""
+    for(i=1;i<=NF;i++) {
+      title=substr($i, 0, index($i, ": ")-1)
+      field=substr($i, index($i, ": ")+2, length($i))
+      if(title ~ "login") {
+        login=field
+      }
+      else if(title ~ "html_url") {
+        html_url=field
+      }
+      else if(title ~ "created_at") {
+        created_at=field
+      }
+      else if(title ~ "public_repos") {
+        public_repos=field
+      }
+      else if(title ~ "public_gists") {
+        public_gists=field
+      }
+    }
+    printf "Gi-st of %s\n%s\n\nCreation date            %s\nNumber of public repos   %s\nNumber of public gists   %s\n\n", login, html_url, created_at, public_repos, public_gists
+  }'
+
+  json=$(curl -s https://api.github.com/users/$1/repos)
+  clean_json
+  repos=$(echo $json_clear | awk -F"[,]" '{
+    for(i=1;i<=NF;i++) {
+      title=substr($i, 0, index($i, ": ")-1)
+      field=substr($i, index($i, ": ")+2, length($i))
+      if(title ~ " name") {
+        printf field ","
+      }
+    }
+  }')
+
+  echo "========================="
+  repo=$(echo $repos| cut -d',' -f 1)
+  until [[ $repo = "" ]]; do
+    echo "Repository $repo"
+
+    json=$(curl -s https://api.github.com/repos/$1/$repo)
+    clean_json
+    echo $json_clear | awk -F"[,]" '{
+      html_url=description=created_at=pushed_at=""
+      for(i=1;i<=NF;i++) {
+        title=substr($i, 0, index($i, ": ")-1)
+        field=substr($i, index($i, ": ")+2, length($i))
+        if(title ~ "html_url") {
+          html_url=field
+        }
+        else if(title ~ "description") {
+          description=field
+        }
+        else if(title ~ "created_at") {
+          created_at=field
+        }
+        else if(title ~ "pushed_at") {
+          pushed_at=field
+        }
+      }
+      printf "%s\n%s\n\nCreation date            %s\nDate of the latest push  %s\n\n", html_url, description, created_at, pushed_at
+    }'
+
+    json=$(curl -s https://api.github.com/repos/$1/$repo/languages)
+    clean_json
+    echo $json_clear | awk -F"[,]" '{
+      for(i=1;i<=NF;i++) {
+        title=substr($i, 0, index($i, ": ")-1)
+        field=substr($i, index($i, ": ")+2, length($i))
+        printf "Language %s\t\t%s bytes\n\n", title, field
+      }
+    }'
+
+    repos=${repos##$repo","}
+    repo=$(echo $repos| cut -d',' -f 1)
+    echo "========================="
+  done
+fi
