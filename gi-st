@@ -94,4 +94,17 @@ else
     repo=$(echo $repos| cut -d',' -f 1)
     echo "========================="
   done
+
+  json=$(curl -s https://api.github.com/rate_limit)
+  clean_json
+  echo $json_clear | awk -F"[,]" '{
+    for(i=1;i<=NF;i++) {
+      title=substr($i, 0, index($i, ": ")-1)
+      field=substr($i, index($i, ": ")+2, length($i))
+      if(title ~ "remaining") {
+        printf "\nNumber of requests remaining: %s", field
+        exit
+      }
+    }
+  }'
 fi
