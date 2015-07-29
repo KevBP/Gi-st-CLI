@@ -1,7 +1,7 @@
 #!/bin/bash
 
 help() {
-  echo -e "Gi-st cli 0.1.1\nLicense: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\nKevBP - https://github.com/KevBP\n"
+  echo -e "Gi-st cli 0.2.0\nLicense: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\nKevBP - https://github.com/KevBP\n"
   echo -e "Usage: gi-st <user_name>\n"
 }
 
