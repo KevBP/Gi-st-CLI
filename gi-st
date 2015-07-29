@@ -106,8 +106,12 @@ else
       field=substr($i, index($i, ": ")+2, length($i))
       if(title ~ "remaining") {
         printf "Number of requests remaining: %s", field
+      }
+      else if(title ~ "reset") {
+        printf "(reset %s)", strftime("%c", field)
         exit
       }
+
     }
   }'
 fi
