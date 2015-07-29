@@ -52,8 +52,10 @@ else
   }')
 
   echo "========================="
+  nb_requests=2
   repo=$(echo $repos| cut -d',' -f 1)
   until [[ $repo = "" ]]; do
+    nb_requests=$(($nb_requests+2))
     echo "Repository $repo"
 
     json=$(curl -s https://api.github.com/repos/$1/$repo)
@@ -95,6 +97,7 @@ else
     echo "========================="
   done
 
+  echo -e "\nNumber of requests sent:      $nb_requests"
   json=$(curl -s https://api.github.com/rate_limit)
   clean_json
   echo $json_clear | awk -F"[,]" '{
@@ -102,7 +105,7 @@ else
       title=substr($i, 0, index($i, ": ")-1)
       field=substr($i, index($i, ": ")+2, length($i))
       if(title ~ "remaining") {
-        printf "\nNumber of requests remaining: %s", field
+        printf "Number of requests remaining: %s", field
         exit
       }
     }
